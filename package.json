@@ -1,0 +1,20 @@
+{
+  "name": "Telegram_bot_rock_paper_scissors_game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rock_game_bot",
+  "scripts": {
+    "start": "node rock_game_bot"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tonconnect/sdk": "^3.0.0",
+    "dotenv": "^8.2.0",
+    "mysql": "^2.18.1",
+    "node-telegram-bot-api": "^0.50.0",
+    "uri-js": "^4.2.2",
+    "web3": "^4.8.0"
+  }
+}
