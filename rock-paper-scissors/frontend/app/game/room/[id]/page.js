@@ -32,6 +32,9 @@ export default function GameRoom({params: {id}}) {
   const [lastAddress, setLastAddress] = useState('');
   const [allCount, setAllCount] = useState(0);
 
+  const readableAddress = (addr) => {
+    return `${addr.slice(0, 4)}...${addr.slice(addr.length - 2)}`;
+  };
   const remainTokenCountByType = (_type) => {
     if(_type == "rock") {
       setCountRock(3);
@@ -150,8 +153,15 @@ export default function GameRoom({params: {id}}) {
                     {item.walletAddress == address ? (<div style={{marginLeft: "auto"}}></div>) : (<div></div>)}
                     <div className="mx-4 bg-[#ffffff] px-10 py-4 rounded-[4px]">
                       {/* <img src=""/> */}
-                      <div className="p-4 bg-[#000000] rounded-full"></div>
-                      <div className="text-center">{item.walletAddress}</div>
+                      <div className="text-center">
+                        <Image
+                          src={"/avatar.svg"}
+                          width="32"
+                          height="32"
+                          alt="avatar ico"
+                        />
+                      </div>
+                      <div className="text-center">{readableAddress(item.walletAddress)}</div>
                     </div>
                     <div className="">
                       <div className="bg-[#ffffff] px-20 py-4 text-center rounded-full">{item.stickerType}</div>
