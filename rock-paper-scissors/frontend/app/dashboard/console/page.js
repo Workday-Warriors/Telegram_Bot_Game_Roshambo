@@ -3,11 +3,15 @@
 import { Container } from "@/components/base/Container";
 import RequireWallet from "@/components/base/RequireWallet";
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
-import clsx from "clsx";
-import dynamic from "next/dynamic";
-import Image from "next/image";
+// import clsx from "clsx";
+// import dynamic from "next/dynamic";
+// import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useDebounce } from 'use-debounce';
+import { configureChains, createClient, WagmiConfig, useAccount, useContract,
+  useSignMessage
+} from "wagmi";
+import { parseEther } from 'viem';
 import BigNumber from "bignumber.js";
 import { useGetStakeInfo } from "@/lib/graphql/useGetStakeInfo";
 import { ADMIN_ADDRESS, DECEMAL_COUNT } from "@/lib/const";
@@ -19,18 +23,9 @@ import Room from "@/components/base/Room";
 import { useRouter } from "next/navigation";
 
 import { getRooms, createRoom, registerUser, getUser, updateUser, gameTokenBuy, gameTokenGet } from "@/api/api";
+import { CONTRACT_ADDRESS } from "@/cosntant/constant";
 export default function Console() {
   const { address, isConnecting, isDisconnected } = useAccount();
-
-  const [rspTokenValue, setRSPToken] = useState(0);
-  const [rockTokenValue, setRockToken] = useState(0);
-  const [scissorsTokenValue, setScissorsToken] = useState(0);
-  const [paperTokenValue, setPaperToken] = useState(0);
-
-  const [remain_rspTokenValue, setRSPTokenAll] = useState(0);
-  const [remain_rockTokenValue, setRockTokenAll] = useState(0);
-  const [remain_scissorsTokenValue, setScissorsTokenAll] = useState(0);
-  const [remain_paperTokenValue, setPaperTokenAll] = useState(0);
 
   const [game_rockTokenValue, setGameRockToken] = useState(0);
   const [game_scissorsTokenValue, setGameScissorsToken] = useState(0);
@@ -44,6 +39,60 @@ export default function Console() {
 
   const { route, setRoute } = useUserProfileContext();
   const router = useRouter();
+
+  ///////////////////////////////////////////////////////
+  //transaction
+  // const [ debouncedTo ] = useDebounce(ADMIN_ADDRESS, 500);
+  // const [amount, setAmount] = useState('');
+  // const [debounceAmount] = useDebounce(amount, 500);
+
+  // const {config} = usePrepareSendTransaction({
+  //   to: debouncedTo,
+  //   value: debounceAmount ? parseEther(debounceAmount) : undefined,
+  // });
+
+  // const { data, sendTransaction } = useSendTransaction(config);
+
+  // const {isLoading, isSuccess} = useWaitForTransaction({
+  //   hash: data?.hash,
+  // });
+
+  const erc20ABI = [
+    "function transfer(address to, uint amount) returns (bool)"
+  ];
+  
+  // Component for sending ERC-20 tokens
+  const SendERC20Token = () => {
+    const { isConnected } = useAccount();
+    const { data: signer } = useSignMessage();
+    const tokenAddress = CONTRACT_ADDRESS;
+  
+    // Create a contract instance
+    const tokenContract = useContract({
+      addressOrName: tokenAddress,
+      contractInterface: erc20ABI,
+      signerOrProvider: signer,
+    });
+  
+    const handleSendToken = async () => {
+      if (!isConnected) {
+        console.log('You must connect a wallet first!');
+        return;
+      }
+  
+      try {
+        const recipientAddress = '0xRecipientAddress'; // Replace with the recipient's address
+        const amount = ethers.utils.parseUnits('100', 18); // Adjust the '100' and '18' based on the amount and decimals of the token
+  
+        const tx = await tokenContract.transfer(recipientAddress, amount);
+        const receipt = await tx.wait();
+        console.log('Token transfer successful:', receipt);
+      } catch (error) {
+        console.error('Token transfer failed:', error);
+      }
+    };
+  //
+  ///////////////////////////////////////////////////////////
 
   const commonGetRooms = async () => {
     getRooms()
@@ -173,7 +222,7 @@ export default function Console() {
               <div className="flex gap-4 p-4 relative">
                 {lstRoom.map((item, key) => (
                   <Room 
-                  roomName={item.name} 
+                  roomName={item.id} 
                   onClick={() => {
                     if((parseInt(set_game_rockTokenValue) + parseInt(set_game_scissorsTokenValue) + parseInt(set_game_paperTokenValue)) == 0) {
                       alert("Input the game token count for one game");
@@ -307,11 +356,23 @@ export default function Console() {
                     setSetedGameRockToken(game_rockTokenValue);
                     setSetedGameScissorsToken(game_scissorsTokenValue);
                     setSetedGamePaperToken(game_paperTokenValue);
-
+                    const total = set_game_paperTokenValue + set_game_rockTokenValue + set_game_scissorsTokenValue;
+                    setAmount(total.toString());
                     // setRockTokenAll(parseInt(remain_rockTokenValue) - parseInt(game_rockTokenValue));
                     // setScissorsTokenAll(parseInt(remain_scissorsTokenValue) - parseInt(game_scissorsTokenValue));
                     // setPaperTokenAll(parseInt(remain_paperTokenValue) - parseInt(game_paperTokenValue));
                   }}>GAME TOKEN SET</Button>
+                  <Button
+                    disabled={isLoading || !sendTransaction || !amount}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert("hello");
+                      sendTransaction?.();
+                    }}
+                  >{isLoading ? 'Sending' : 'Send'}</Button>
+                  {isSuccess && (
+                    <a className="text-white p-4" href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan</a>
+                  )}
                 </div>
               </div>
             </div>
