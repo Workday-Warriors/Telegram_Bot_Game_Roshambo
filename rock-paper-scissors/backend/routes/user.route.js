@@ -2,8 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const { History, User, Game } = require('../database/sequelize');
 const router = express.Router();
-const { Web3 } = require("web3");
-const { ADMIN_ADDRESS, PRIVATE_KEY, CONTRACT_ADDRESS } = require("../utils/const");
 
 router.get('/', (req, res) => {
     res.send('GET request to the homepage');
@@ -153,37 +151,6 @@ router.post('/delete', async (req, res) => {
 //body params:walletAddress, rockCount, scissorsCount, paperCount, roomId
 router.post('/gameToken/buy', async (req, res) => {
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // { TRANSACTION
-    const tokenABI = require('../contract/abi.json');
-
-    const web3 = new Web3(new Web3.providers.HttpProvider('https://sepolia.infura.io/v3/b5c3be73a3024cb8888be3142d0135d8'));
-    const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY);
-    const contract = new web3.eth.Contract(tokenABI, CONTRACT_ADDRESS);
-    async function sendTransaction() {
-    
-        const allCount = req.body.rock + req.body.paper + req.body.scissors;
-        const data = contract.methods.transfer(ADMIN_ADDRESS, web3.utils.toWei( allCount, 'RSP' )).encodeABI();
-        const gasPrice = web3.utils.toWei( allCount, 'gwei' ); 
-        const nonce = await web3.eth.getTransactionCount(account.address);
-        const rawTransaction = {
-            'from': account.address,
-            'to': CONTRACT_ADDRESS,
-            'value': '0x0',
-            'gasPrice': gasPrice,
-            'gasLimit': '100000',
-            'data': data,
-            'nonce': nonce
-        };
-        
-        const signedTx = await web3.eth.accounts.signTransaction(rawTransaction, PRIVATE_KEY);
-        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-        console.log('Transaction receipt: ', receipt);
-    }
-    sendTransaction();
-
-    // }
-    ///////////////////////////////////////////////////////////////////////////////////////////////
     console.log("log");
     console.log(req.body);
 
