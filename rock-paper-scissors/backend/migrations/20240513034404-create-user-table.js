@@ -9,26 +9,25 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    const enumValues = ['Rock', 'Paper', 'Scissors']
     await queryInterface.createTable(
-      'history',
+      'users',
       {
         id: {
           type: Sequelize.DataTypes.BIGINT,
           primaryKey: true,
           autoIncrement: true,
         },
-        roomId: {
-          type: Sequelize.DataTypes.BIGINT,
-          allowNull: false,
-        },
         walletAddress: {
           type: Sequelize.DataTypes.STRING,
           allowNull: false,
         },
-        stickerType: {
-          type: Sequelize.ENUM(...enumValues),
+        stickerCount: {
+          type: Sequelize.DataTypes.BIGINT,
           allowNull: false,
+        },
+        is_del: {
+          type: Sequelize.DataTypes.TINYINT,
+          defaultValue: false,
         },
         createdAt: {
           type: Sequelize.DataTypes.DATE,
@@ -54,6 +53,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('history');
+    await queryInterface.dropTable('users');
   }
 };

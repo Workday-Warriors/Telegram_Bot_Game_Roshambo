@@ -1,5 +1,5 @@
 module.exports = (sequelize, type) => sequelize.define(
-    'room',
+    'rooms',
     {
       id: {
         type: type.BIGINT,
@@ -17,6 +17,10 @@ module.exports = (sequelize, type) => sequelize.define(
       winner: {
         type: type.STRING,
         allowNull: true,
+      },
+      prize: {
+        type: type.BIGINT,
+        defaultValue: 0,
       }
     },
     {

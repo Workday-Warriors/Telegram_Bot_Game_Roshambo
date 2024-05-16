@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 
-export function Container({ children, className }) {
+export default function Container({ children, className }) {
   return (
     <div
       className={clsx(

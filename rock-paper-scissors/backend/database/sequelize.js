@@ -3,6 +3,7 @@ const RoomModel = require('./models/room');
 const HistoryModel = require('./models/history');
 const UserModel = require('./models/user');
 const GameModel = require('./models/game');
+const TelegramUserModel = require('./models/telegram_user');
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_UNAME, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
@@ -33,6 +34,7 @@ const Room = RoomModel(sequelize, Sequelize);
 const History = HistoryModel(sequelize, Sequelize);
 const User = UserModel(sequelize, Sequelize);
 const Game = GameModel(sequelize, Sequelize);
+const TGUser = TelegramUserModel(sequelize, Sequelize);
 
 // History.belongsTo(Room, { foreignKey: 'roomId' });
 // Room.hasMany(History);
@@ -42,5 +44,6 @@ module.exports = {
   Room,
   History,
   User,
-  Game
+  Game,
+  TGUser
 };

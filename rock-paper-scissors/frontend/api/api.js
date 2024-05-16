@@ -28,14 +28,14 @@ export const checkRoomStatus = async (_roomId) => {
     }
 };
 
-export const sendMessageByRoomId = async (_roomId, _address, _stickerType) => {
+export const sendMessageByRoomId = async (_roomId, _address, _stickerNum) => {
 
     const api_url = SERVER_ADDRESS + '/api/user/history/sendMessage';
     try {
         const inputParam = {
             roomId: _roomId,
             walletAddress: _address,
-            stickerType: _stickerType
+            stickerNum: _stickerNum
         };
 
         const response = await axios.post(api_url, inputParam);
@@ -144,13 +144,27 @@ export const getUser = async (_address) => {
     }
 };
 
-export const gameTokenBuy = async (_rock, _scissors, _paper, _address, _room) => {
+export const gameTokenBuy = async (_sticker, _address, _room) => {
     const api_url = SERVER_ADDRESS + '/api/user/gameToken/buy';
 
     const inputParam = {
-        rock: _rock,
-        scissors: _scissors,
-        paper: _paper,
+        sticker: _sticker,
+        walletAddress: _address,
+        roomId: _room
+    };
+
+    try{
+        const response = await axios.post(api_url, inputParam);
+        return response.data;
+    } catch(error) {
+        console.log('gameTokenBuy Error:', error);
+    }
+};
+
+export const gameTokenUpdate = async (_address, _room) => {
+    const api_url = SERVER_ADDRESS + '/api/user/gameToken/setRoom';
+
+    const inputParam = {
         walletAddress: _address,
         roomId: _room
     };

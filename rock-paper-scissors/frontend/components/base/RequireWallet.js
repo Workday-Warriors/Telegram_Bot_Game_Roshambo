@@ -1,8 +1,10 @@
 "use client";
 
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
-import Button from "./Button";
-import { Container } from "./Container";
+//import Button from "./Button";
+import dynamic from "next/dynamic";
+const Button = dynamic(() => import("./Button"), {ssr:false});
+const Container = dynamic(() => import("./Container"), {ssr:false});
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 
 export default function RequireWallet({ title }) {

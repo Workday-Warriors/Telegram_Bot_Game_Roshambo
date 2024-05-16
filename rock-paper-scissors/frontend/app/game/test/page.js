@@ -4,8 +4,9 @@ import { Container } from "@/components/base/Container";
 import RequireWallet from "@/components/base/RequireWallet";
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
 import { useAccount } from "wagmi";
-import Button from "@/components/base/Button";
-import Room from "@/components/base/Room";
+//import Button from "@/components/base/Button";
+import dynamic from "next/dynamic";
+const Button = dynamic(() => import("@/components/base/Button"), {ssr:false});
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 

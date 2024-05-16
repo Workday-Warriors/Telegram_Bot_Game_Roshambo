@@ -1,11 +1,13 @@
 "use client";
 
-import { Container } from "@/components/base/Container";
+import Image from "next/image";
 import RequireWallet from "@/components/base/RequireWallet";
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
 import { useAccount } from "wagmi";
-import Button from "@/components/base/Button";
-import Room from "@/components/base/Room";
+//import Button from "@/components/base/Button";
+import dynamic from "next/dynamic";
+const Button = dynamic(() => import("@/components/base/Button"), {ssr:false});
+const Container = dynamic(() => import("@/components/base/Container"), {ssr:false});
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMessagesByRoomId, checkRoomStatus, sendMessageByRoomId, getGameTokenByAddress, finishGameByWinner } from "@/api/api";
@@ -24,25 +26,15 @@ export default function GameRoom({params: {id}}) {
     return result;
   };
 
-  const [countRock, setCountRock] = useState(0);
-  const [countScissors, setCountScissors] = useState(0);
-  const [countPaper, setCountPaper] = useState(0);
+  const [stickerCount, setStickerCount] = useState(0);
   const [lstMessage, setLstMessage] = useState([]);
   const [lastSticker, setLastSticker] = useState('');
   const [lastAddress, setLastAddress] = useState('');
   const [allCount, setAllCount] = useState(0);
+  const [standardTime, setStandardTime] = useState(REMAIN_BASIC_TIMER);
 
   const readableAddress = (addr) => {
     return `${addr.slice(0, 4)}...${addr.slice(addr.length - 2)}`;
-  };
-  const remainTokenCountByType = (_type) => {
-    if(_type == "rock") {
-      setCountRock(3);
-    } else if (_type == "scissors") {
-      setCountScissors(3);
-    } else if(_type == "paper") {
-      setCountPaper(3);
-    }
   };
 
   const [remainTime, setRemainTime] = useState(REMAIN_BASIC_TIMER);
@@ -58,9 +50,9 @@ export default function GameRoom({params: {id}}) {
           getGameTokenByAddress(id, address)
           .then(data => {
             if(data.successMessage == 0) {
-              setCountRock(data.result[0].rock);
-              setCountScissors(data.result[0].scissors);
-              setCountPaper(data.result[0].paper);
+              console.log("getGameTokenByAddress");
+              console.log(data.result[0]);
+              setStickerCount(data.result[0].sticker);
             }
           })
           .catch(error => console.error('getGameTokenByAddress Error:', error));
@@ -71,17 +63,36 @@ export default function GameRoom({params: {id}}) {
               setAllCount(data.result.length);
               if(allCount > lstMessage.length) {
                 if(allCount < TOKEN_MIDDLE_COUNT) {
-                  setRemainTime(REMAIN_BASIC_TIMER);
+                  setStandardTime(REMAIN_BASIC_TIMER);
                 } else if ( allCount > TOKEN_MIDDLE_COUNT & allCount < TOKEN_HIGH_COUNT) {
-                  setRemainTime(REMAIN_MIDDLE_TIMER);
+                  setStandardTime(REMAIN_MIDDLE_TIMER);
                 } else if (allCount > TOKEN_HIGH_COUNT) {
-                  setRemainTime(REMAIN_HIGH_TIMER);
+                  setStandardTime(REMAIN_HIGH_TIMER);
                 }
 
                 setLstMessage(data.result);
               }
-              setLastSticker(lstMessage[lstMessage.length - 1].stickerType);
-              setLastAddress(lstMessage[lstMessage.length - 1].walletAddress);
+              const msgTime = new Date(data.result[data.result.length - 1].createdAt);
+              const now = new Date();
+              console.log(msgTime.getFullYear()+ "," + msgTime.getMonth()+ "," + msgTime.getDate()+ "," + msgTime.getHours()+ "," + msgTime.getMinutes()+ "," + msgTime.getSeconds());
+              console.log(now.getFullYear()+ "," + now.getMonth()+ "," + now.getDate()+ "," + now.getHours()+ "," + now.getMinutes()+ "," + now.getSeconds());
+              if(((msgTime.getFullYear() - now.getFullYear()) != 0) || ((msgTime.getMonth() - now.getMonth()) != 0)) return;
+
+              // Calculate total seconds
+              const totalSecondsNow = 86400 * now.getDate() + (now.getHours() + 8) * 3600 + now.getMinutes() * 60 + now.getSeconds();
+              const totalSecondsLastMsg = 86400 * msgTime.getDate() + msgTime.getHours() * 3600 + msgTime.getMinutes() * 60 + msgTime.getSeconds();
+              console.log(totalSecondsNow);
+              console.log(totalSecondsLastMsg);
+              if( standardTime - (totalSecondsNow - totalSecondsLastMsg) > 0) {
+                setRemainTime(standardTime - (totalSecondsNow - totalSecondsLastMsg));
+                console.log(remainTime);
+              } else {
+                router.push(`/`);
+              }
+              const currentTimeInSeconds = Math.floor(new Date().getTime() / 1000);
+              console.log(currentTimeInSeconds);
+              setLastSticker(data.result[data.result.length - 1].stickerType);
+              setLastAddress(data.result[data.result.length - 1].walletAddress);
             }
           })
           .catch(error => console.error('getMessagesByRoomId', error));
@@ -95,9 +106,14 @@ export default function GameRoom({params: {id}}) {
     sendMessageByRoomId(id, address, _sticker)
     .then(data => {
       if(data.successMessage == 0) {
+        console.log('sendMessageByRoomId');
+        console.log(data.result);
+        // const remainSticker = stickerCount - 1;
+        // console.log(remainSticker);
+        // setStickerCount(remainSticker);
       }
     })
-    .catch(error => console.error('getMessagesByRoomId', error));
+    .catch(error => console.error('sendMessageByRoomId', error));
   };
   
   const commonFinishGame = async () => {
@@ -107,7 +123,7 @@ export default function GameRoom({params: {id}}) {
         router.push('/');
       }
     })
-    .catch(error => console.error('getMessagesByRoomId', error));
+    .catch(error => console.error('finishGameByWinner', error));
   }
   useEffect(() => {
     
@@ -120,8 +136,8 @@ export default function GameRoom({params: {id}}) {
         }
         return;
       }
-      const tmpTime = remainTime - 1;
-      setRemainTime(tmpTime);
+      // const tmpTime = remainTime - 1;
+      // setRemainTime(tmpTime);
       commonCheckRoomStatus();
     }, 1000);
 
@@ -137,34 +153,31 @@ export default function GameRoom({params: {id}}) {
       </div>
       <div className="w-full h-fit gap-4 sm:gap-8 xl:gap-12 lg:flex-row xl:flex-row">
         {address ? (
-          // address === ADMIN_ADDRESS ?? (
-          // <Container className={"w-full"}>
-          //   <div className="flex w-full h-full gap-4 p-4 relative justify-center">
-          //     <Button>
-          //       Create a room
-          //     </Button>
-          //   </div>
-          // </Container>)
           <>
             <Container className={"w-full"}>
               <div className=" h-full gap-4 p-4 relative justify-center">
                 {lstMessage.map((item, key) => (
                   <div className="mt-[20px] w-full flex">
                     {item.walletAddress == address ? (<div style={{marginLeft: "auto"}}></div>) : (<div></div>)}
-                    <div className="mx-4 bg-[#ffffff] px-10 py-4 rounded-[4px]">
+                    <div className="mx-4 px-10 py-4 rounded-[4px]">
                       {/* <img src=""/> */}
                       <div className="text-center">
                         <Image
+                          className="m-auto"
                           src={"/avatar.svg"}
                           width="32"
                           height="32"
                           alt="avatar ico"
                         />
                       </div>
-                      <div className="text-center">{readableAddress(item.walletAddress)}</div>
+                      <div className="text-center text-white">{readableAddress(item.walletAddress)}</div>
                     </div>
                     <div className="">
-                      <div className="bg-[#ffffff] px-20 py-4 text-center rounded-full">{item.stickerType}</div>
+                      <div className="px-20 py-4 text-center rounded-full">
+                        <video autoPlay loop name="media">
+                          <source src={`/image/stickers/sticker${item.stickerNum}.webm`} type="video/webm"/>
+                        </video>
+                      </div>
                       <div className="mt-2 px-2 text-right text-white">{item.createdAt}</div>
                     </div>
                   </div>
@@ -174,24 +187,11 @@ export default function GameRoom({params: {id}}) {
             </Container>
             <div className="fixed bottom-0 w-full">
               <div className="flex w-full h-full gap-4 p-4 relative justify-center">
-              {/* <Button onClick={remainTokenCountByType("rock")}>Rocks({countRock})</Button>
-              <Button onClick={remainTokenCountByType("scissors")}>Scissors({countScissors})</Button>
-              <Button onClick={remainTokenCountByType("rock")}>Papers({countPaper})</Button> */}
                 <Button onClick={() => { 
                   if(lastAddress == address) return;
-                  if (countRock == 0 || lastSticker == "Rock" || lastSticker == "Paper") return; 
-                  commonSendMessageByRoomId("Rock");
-                  }}>Rock ({countRock})</Button>
-                <Button onClick={() => { 
-                  if(lastAddress == address) return;
-                  if (countScissors == 0 || lastSticker == "Scissors" || lastSticker == "Rock") return; 
-                  commonSendMessageByRoomId("Scissors");
-                  }}>Scissors ({countScissors})</Button>
-                <Button onClick={() => { 
-                  if(lastAddress == address) return;
-                  if (countPaper == 0 || lastSticker == "Paper" || lastSticker == "Scissors") return; 
-                  commonSendMessageByRoomId("Paper");
-                  }}>Paper ({countPaper})</Button>
+                  if (stickerCount == 0) return; 
+                  commonSendMessageByRoomId(stickerCount);
+                  }}>Sticker ({stickerCount})</Button>
                 <div className="mt-2 ml-[10px] w-[200px] text-2xl flex text-white">
                   <div>remain-time:</div>
                   <div>{remainTime}</div>

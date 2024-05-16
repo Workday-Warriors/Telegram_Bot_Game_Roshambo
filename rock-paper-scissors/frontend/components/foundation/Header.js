@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Button from "../base/Button";
+//import Button from "../base/Button";
+import dynamic from "next/dynamic";
+const Button = dynamic(() => import("../base/Button"), {ssr:false});
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
 import clsx from "clsx";
 import { useWeb3Modal } from "@web3modal/wagmi/react";

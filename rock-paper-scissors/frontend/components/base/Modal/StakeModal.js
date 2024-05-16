@@ -6,7 +6,9 @@ import {
 } from "@/lib/const";
 
 import Image from "next/image";
-import Button from "../Button";
+//import Button from "../Button";
+import dynamic from "next/dynamic";
+const Button = dynamic(() => import("../Button"), {ssr:false});
 import clsx from "clsx";
 import {
   useApprove,

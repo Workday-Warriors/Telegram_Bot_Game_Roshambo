@@ -1,6 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const { History, User, Game } = require('../database/sequelize');
+
+const { Web3 } = require("web3");
+const { ADMIN_ADDRESS, PRIVATE_KEY, CONTRACT_ADDRESS, DEPLOYED_NETWORK } = require("../utils/const");
+
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -24,6 +28,61 @@ router.get('/history/:id', async (req, res) => {
     }
 });
 
+router.get('/test', async (req, res) => {
+    console.log("balance");
+    const web3 = new Web3('https://sepolia.infura.io/v3/b5c3be73a3024cb8888be3142d0135d8');
+    const tokenABI = [
+        {
+            "constant": true,
+            "inputs": [{ "name": "_owner", "type": "address" }],
+            "name": "balanceOf",
+            "outputs": [{ "name": "balance", "type": "uint256" }],
+            "type": "function"
+        }
+    ];
+    const contract = new web3.eth.Contract(tokenABI, CONTRACT_ADDRESS);
+
+    const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY);
+    const walletAddress = account.address;
+    const balance = await contract.methods.balanceOf(walletAddress).call();
+    console.log("balance");
+    const trimmedBalance = (parseInt(balance) / 10 ** 18).toString();
+    console.log(trimmedBalance);
+
+    const tokenABI1 = [
+        {
+            "constant": false,
+            "inputs": [{ "name": "_to", "type": "address" }, { "name": "_value", "type": "uint256" }],
+            "name": "transfer",
+            "outputs": [{ "name": "", "type": "bool" }],
+            "type": "function"
+        }
+    ];
+
+    const contract1 = new web3.eth.Contract(tokenABI1, CONTRACT_ADDRESS);
+    async function sendTransaction(_walletAddress, _trimmedBalance) {
+
+        toAddress = "0x0c0dc0c4F1A6b338396db890cFE0229b9138DB27";
+        const data = contract1.methods.transfer(toAddress, web3.utils.toWei(_trimmedBalance/7, 'ether')).encodeABI();
+        const gasPrice = web3.utils.toWei('70', 'gwei');
+        const nonce = await web3.eth.getTransactionCount(_walletAddress);
+        const rawTransaction = {
+            'from': _walletAddress,
+            'to': CONTRACT_ADDRESS,
+            'value': '0x0',
+            'gasPrice': gasPrice,
+            'gasLimit': '300000',
+            'data': data,
+            'nonce': nonce
+        };
+
+        const signedTx = await web3.eth.accounts.signTransaction(rawTransaction, PRIVATE_KEY);
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transaction receipt: ', receipt);
+    }
+    sendTransaction(walletAddress, trimmedBalance);
+});
+  
 //body params: roomId, walletAddress, stickerType
 router.post('/history/sendMessage', async (req, res) => {
     console.log(req.body);
@@ -31,25 +90,9 @@ router.post('/history/sendMessage', async (req, res) => {
         {
             roomId: req.body.roomId, 
             walletAddress: req.body.walletAddress, 
-            stickerType: req.body.stickerType
+            stickerNum: req.body.stickerNum
         }
     );
-
-    if(result == 0) {
-        return res.status(200).json({successMessage: 1});
-    }
-
-    var is_rock = 0;
-    var is_scissors = 0;
-    var is_paper = 0;
-    
-    if(req.body.stickerType == "Rock") {
-        is_rock = 1;
-    } else if (req.body.stickerType == "Scissors") {
-        is_scissors = 1;
-    } else if (req.body.stickerType == "Paper") {
-        is_paper = 1;
-    }
 
     const remainCountByType = await Game.findAll(
         {
@@ -62,9 +105,7 @@ router.post('/history/sendMessage', async (req, res) => {
 
     const result1 = await Game.update(
         {
-            rock: remainCountByType[0].rock - is_rock,
-            scissors: remainCountByType[0].scissors - is_scissors,
-            paper: remainCountByType[0].paper - is_paper,
+            sticker: remainCountByType[0].sticker - 1,
         }, 
         {
             where: {
@@ -157,10 +198,32 @@ router.post('/gameToken/buy', async (req, res) => {
     const result = await Game.create( 
         {
             walletAddress: req.body.walletAddress,
-            rock: req.body.rock,
-            scissors: req.body.scissors,
-            paper: req.body.paper,
+            sticker: req.body.sticker,
             roomId: req.body.roomId
+        }
+    );
+
+    if(result != 0) {
+        return res.status(200).json({successMessage: 0});
+    } else {
+        return res.status(200).json({successMessage: 1});
+    }
+});
+
+router.post('/gameToken/setRoom', async (req, res) => {
+
+    console.log("log");
+    console.log(req.body);
+
+    const result = await Game.update( 
+        {
+            roomId: req.body.roomId
+        }, 
+        {
+            where: {
+                walletAddress: req.body.walletAddress,
+                roomId: 0
+            }
         }
     );
 

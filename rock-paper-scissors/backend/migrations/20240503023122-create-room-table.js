@@ -24,6 +24,20 @@ module.exports = {
         finished: {
           type: Sequelize.DataTypes.BOOLEAN,
           defaultValue: false,
+        },
+        winner: {
+          type: Sequelize.DataTypes.STRING,
+          allowNull: true,
+        },
+        createdAt: {
+          type: Sequelize.DataTypes.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        },
+        updatedAt: {
+          type: Sequelize.DataTypes.DATE,
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
         }
       },
       {

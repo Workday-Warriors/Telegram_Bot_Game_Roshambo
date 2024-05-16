@@ -1,5 +1,5 @@
 module.exports = (sequelize, type) => sequelize.define(
-    'tbl_user',
+    'users',
     {
       id: {
         type: type.BIGINT,

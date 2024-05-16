@@ -1,10 +1,10 @@
 "use client";
 
-import Header from "@/components/foundation/Header";
-import Sidebar from "@/components/foundation/Sidebar";
 import { useUserProfileContext } from "@/lib/contexts/UserProfileProvider";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+const Header = dynamic(() => import("@/components/foundation/Header"), {ssr:false});
 
 export default function DashboardLayout({ children }) {
   const { route, setRoute } = useUserProfileContext();

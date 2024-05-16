@@ -1,5 +1,5 @@
 module.exports = (sequelize, type) => sequelize.define(
-    'game_remain_token_count',
+    'games',
     {
       id: {
         type: type.BIGINT,
@@ -10,15 +10,7 @@ module.exports = (sequelize, type) => sequelize.define(
         type: type.STRING,
         allowNull: false,
       },
-      rock: {
-        type: type.BIGINT,
-        defaultValue: 0,
-      },
-      scissors: {
-        type: type.BIGINT,
-        defaultValue: 0,
-      },
-      paper: {
+      sticker: {
         type: type.BIGINT,
         defaultValue: 0,
       },

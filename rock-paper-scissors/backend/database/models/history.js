@@ -14,9 +14,9 @@ module.exports = (sequelize, type) => sequelize.define(
         type: type.STRING,
         allowNull: false,
       },
-      stickerType: {
-        type: type.ENUM('Rock', 'Paper', 'Scissors'),
-        allowNull: false,
+      stickerNum: {
+        type: type.BIGINT,
+        defaultValue: 0
       }
     },
     {
