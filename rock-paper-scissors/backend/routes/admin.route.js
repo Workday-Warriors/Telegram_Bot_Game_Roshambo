@@ -12,9 +12,25 @@ const bot = new TelegramBot(process.env.BOT_API, { polling: true});
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
-  const result = await TGUser.create({chatId: chatId});
+  
+  const resultTelegramUser = await TGUser.findAll({
+    where: {}
+  });
+
+  var bNewUser = 1;
+  for(let i = 0; i < resultTelegramUser.length; i ++) {
+    if(resultTelegramUser[i].chatId == chatId) {
+      bNewUser = 0;
+      break;
+    }
+  }
+
+  var result;
+  if(bNewUser == 1) {
+    result = await TGUser.create({chatId: chatId});
+  }
   if( result != 0 ) {
-    bot.sendMessage(chatId, 'Welcome! This is DJEN GameBot. Click https://5d11-83-143-86-74.ngrok-free.app');
+    bot.sendMessage(chatId, 'Welcome! This is DJEN GameBot. Click https://bbbe-42-84-224-79.ngrok-free.app');
   } else {
     bot.sendMessage(chatId, 'Sorry, Server has some error.');
   }
@@ -31,7 +47,7 @@ router.post('/createRoom', allowAdmin, async (req, res) => {
 });
 
 router.get('/check/room/:id', async (req, res) => {
-  console.log(req.params.id);
+  //console.log(req.params.id);
   const result = await Room.findAll(
     {
       where: {
@@ -40,7 +56,7 @@ router.get('/check/room/:id', async (req, res) => {
     }
   );
 
-  console.log(result);
+//  console.log(result);
   if(result != 0) {
     return res.status(200).json({result: result, successMessage: 0});
   } else {
@@ -50,7 +66,7 @@ router.get('/check/room/:id', async (req, res) => {
 
 //delete the room because the game is finished
 router.post('/room/delete', async(req, res) => {
-  console.log(req.body);
+  console.log("winner set");
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // { TRANSACTION
@@ -83,16 +99,20 @@ router.post('/room/delete', async(req, res) => {
         }
     ];
 
-    toAddress = "0x0c0dc0c4F1A6b338396db890cFE0229b9138DB27";
+    toAddress = req.body.walletAddress;
+    const contract1 = new web3.eth.Contract(tokenABI1, CONTRACT_ADDRESS);
         const data = contract1.methods.transfer(toAddress, web3.utils.toWei(trimmedBalance/7, 'ether')).encodeABI();
-        const gasPrice = web3.utils.toWei('70', 'gwei');
+        const gasPrice = web3.utils.toWei('200', 'gwei');
         const nonce = await web3.eth.getTransactionCount(walletAddress);
+        
+        const gasMax = web3.utils.toWei('100', 'gwei');
         const rawTransaction = {
             'from': walletAddress,
             'to': CONTRACT_ADDRESS,
             'value': '0x0',
+            'gasMax': gasMax,
             'gasPrice': gasPrice,
-            'gasLimit': '300000',
+            'gasLimit': web3.utils.toHex(2100000),
             'data': data,
             'nonce': nonce
         };
@@ -100,6 +120,8 @@ router.post('/room/delete', async(req, res) => {
         const signedTx = await web3.eth.accounts.signTransaction(rawTransaction, PRIVATE_KEY);
         const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
         console.log('Transaction receipt: ', receipt);
+
+        const valueRize = trimmedBalance/7;
 
         const result = await Room.update(
           {
@@ -109,25 +131,26 @@ router.post('/room/delete', async(req, res) => {
           {
               where: {
                   finished: 0,
-                  id: req.body.roomId
+                  id: req.body.roomId,
+                  prize: parseInt(valueRize)
               }
           }
       );
     
-      const valueRize = trimmedBalance/7;
+      console.log(result);
       const resultTelegramUser = await TGUser.findAll({
         where: {}
       });
 
-      console.log(resultTelegramUser);
-      for(let i = 0; i < result.length; i ++) {
-        bot.sendMessage(result[i].chatId, req.body.roomId,req + " ROOM->" + "WINNER:" + req.body.walletAddress + "," + valueRize);
+      for(let i = 0; i < resultTelegramUser.length; i ++) {
+        console.log(resultTelegramUser[i].chatId);
+        bot.sendMessage(resultTelegramUser[i].chatId, req.body.roomId + " ROOM->" + "WINNER:" + req.body.walletAddress + ", Reward:" + valueRize);
       }
 
       if(result != 0) {
-          return res.status(200).json({successMessage: 0});
-      } else {
           return res.status(200).json({successMessage: 1});
+      } else {
+          return res.status(200).json({successMessage: 0});
       }
 });
 

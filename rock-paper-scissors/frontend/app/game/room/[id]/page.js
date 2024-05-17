@@ -32,6 +32,7 @@ export default function GameRoom({params: {id}}) {
   const [lastAddress, setLastAddress] = useState('');
   const [allCount, setAllCount] = useState(0);
   const [standardTime, setStandardTime] = useState(REMAIN_BASIC_TIMER);
+  const [finishFlag, setFinishFlag] = useState(0);
 
   const readableAddress = (addr) => {
     return `${addr.slice(0, 4)}...${addr.slice(addr.length - 2)}`;
@@ -43,7 +44,7 @@ export default function GameRoom({params: {id}}) {
     checkRoomStatus(id)
     .then(data => {
       if(data.successMessage == 0) {
-        if(data.result[0].finished == 1) {
+        if(data.result[0].finished == 1) {          
           router.push('/');
         } else if (data.result[0].finished == 0) {
 
@@ -83,7 +84,7 @@ export default function GameRoom({params: {id}}) {
               const totalSecondsLastMsg = 86400 * msgTime.getDate() + msgTime.getHours() * 3600 + msgTime.getMinutes() * 60 + msgTime.getSeconds();
               console.log(totalSecondsNow);
               console.log(totalSecondsLastMsg);
-              if( standardTime - (totalSecondsNow - totalSecondsLastMsg) > 0) {
+              if( standardTime - (totalSecondsNow - totalSecondsLastMsg) >= 0) {
                 setRemainTime(standardTime - (totalSecondsNow - totalSecondsLastMsg));
                 console.log(remainTime);
               } else {
@@ -103,6 +104,7 @@ export default function GameRoom({params: {id}}) {
   };
 
   const commonSendMessageByRoomId = async (_sticker) => {
+    console.log('hi1');
     sendMessageByRoomId(id, address, _sticker)
     .then(data => {
       if(data.successMessage == 0) {
@@ -117,10 +119,12 @@ export default function GameRoom({params: {id}}) {
   };
   
   const commonFinishGame = async () => {
+    console.log('Finish Game');
     finishGameByWinner(id, address)
     .then(data => {
+      router.push('/');
       if(data.successMessage == 0) {
-        router.push('/');
+        
       }
     })
     .catch(error => console.error('finishGameByWinner', error));
@@ -129,16 +133,18 @@ export default function GameRoom({params: {id}}) {
     
     const intervalId = setInterval(() => {
       if(remainTime == 0) {
-        if(lastAddress == address) {
+        console.log('winnerAddress' + lastAddress);
+        console.log('userAddress' + address);
+        if((lastAddress == address) && (finishFlag == 0)) {
+          setFinishFlag(1);
           commonFinishGame();
         } else {
           router.push('/');
         }
         return;
+      } else {
+        commonCheckRoomStatus();
       }
-      // const tmpTime = remainTime - 1;
-      // setRemainTime(tmpTime);
-      commonCheckRoomStatus();
     }, 1000);
 
     return () => {
@@ -172,8 +178,8 @@ export default function GameRoom({params: {id}}) {
                       </div>
                       <div className="text-center text-white">{readableAddress(item.walletAddress)}</div>
                     </div>
-                    <div className="">
-                      <div className="px-20 py-4 text-center rounded-full">
+                    <div style={{paddingTop:30}}>
+                      <div className="w-[200px] text-center rounded-full">
                         <video autoPlay loop name="media">
                           <source src={`/image/stickers/sticker${item.stickerNum}.webm`} type="video/webm"/>
                         </video>

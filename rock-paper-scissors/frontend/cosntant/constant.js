@@ -1,10 +1,10 @@
-export const SERVER_ADDRESS = 'http://192.168.89.3:4000';
+export const SERVER_ADDRESS = 'http://localhost:4000';//
 export const ADMIN_WALLET_ADDRESS = '0x5b51d86E0Cb128F27F1473AeD0375D81c8796054';
 export const CONTRACT_ADDRESS = "0xf5778BD720C576e3045C0AE2892150cb6E1438E0";
 
-export const REMAIN_BASIC_TIMER = 900;
-export const REMAIN_MIDDLE_TIMER = 10;
-export const REMAIN_HIGH_TIMER = 5;
+export const REMAIN_BASIC_TIMER = 10;
+export const REMAIN_MIDDLE_TIMER = 5;
+export const REMAIN_HIGH_TIMER = 2;
 
-export const TOKEN_MIDDLE_COUNT = 16;
-export const TOKEN_HIGH_COUNT = 100;
+export const TOKEN_MIDDLE_COUNT = 6;
+export const TOKEN_HIGH_COUNT = 10;

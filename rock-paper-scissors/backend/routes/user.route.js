@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
 ////////////////////////////////////////////////////////////////////////
 //get the all messages
 router.get('/history/:id', async (req, res) => {
-    console.log(req.params.id);
+//    console.log(req.params.id);
     const result = await History.findAll({
         where: {
             roomId: req.params.id
@@ -85,7 +85,7 @@ router.get('/test', async (req, res) => {
   
 //body params: roomId, walletAddress, stickerType
 router.post('/history/sendMessage', async (req, res) => {
-    console.log(req.body);
+//    console.log(req.body);
     const result = await History.create(
         {
             roomId: req.body.roomId, 
@@ -124,7 +124,7 @@ router.post('/history/sendMessage', async (req, res) => {
 
 /////////////////////////////////////////////////////////////////////////
 router.post('/register', async (req, res) => {
-    console.log(req.body);
+//    console.log(req.body);
     const result = await User.create({walletAddress: req.body.walletAddress, stickerCount: req.body.stickerCount});
     if (result != 0) {
         return res.status(200).json({successMessage: 0});
@@ -170,7 +170,7 @@ router.post('/update', async (req, res) => {
 });
 
 router.post('/delete', async (req, res) => {
-    console.log(req.body.walletAddress);
+//    console.log(req.body.walletAddress);
     const result = await User.update(
         {is_del: true},
         {
@@ -193,7 +193,7 @@ router.post('/delete', async (req, res) => {
 router.post('/gameToken/buy', async (req, res) => {
 
     console.log("log");
-    console.log(req.body);
+//    console.log(req.body);
 
     const result = await Game.create( 
         {
@@ -212,8 +212,8 @@ router.post('/gameToken/buy', async (req, res) => {
 
 router.post('/gameToken/setRoom', async (req, res) => {
 
-    console.log("log");
-    console.log(req.body);
+//    console.log("log");
+//    console.log(req.body);
 
     const result = await Game.update( 
         {
@@ -237,7 +237,7 @@ router.post('/gameToken/setRoom', async (req, res) => {
 //body params:walletAddress, roomId 
 router.post('/gameToken/get', async (req, res) => {
     ///////////////////////////////////////////
-    console.log(req.body);
+//    console.log(req.body);
     const result = await Game.findAll(
         {
             where: {
